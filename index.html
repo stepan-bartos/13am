@@ -7,7 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%97%89</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -19,11 +19,11 @@
       --amber: #FFB000;
       --amber-dim: #CC8D00;
       --amber-dark: #7A5500;
+      --amber-glow: rgba(255, 176, 0, 0.5);
       --amber-glow-soft: rgba(255, 176, 0, 0.3);
-      --amber-glow-med: rgba(255, 176, 0, 0.4);
+      --amber-text-soft: rgba(255, 176, 0, 0.85);
+      --amber-text-dim: rgba(255, 176, 0, 0.6);
       --bg: #0a0a0a;
-      --bg-surface: #1a1a1a;
-      --text-dim: #7A5500;
       --font: 'IBM Plex Mono', 'Fira Mono', 'Courier New', monospace;
     }
 
@@ -36,212 +36,509 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    .page {
+    /* ── CRT Screen Wrapper ── */
+    .crt-screen {
       height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       position: relative;
+      animation: flicker 0.15s infinite;
     }
 
-    /* CRT overlay */
-    .page::before {
+    /* Scanlines */
+    .crt-screen::before {
       content: '';
       position: fixed;
       inset: 0;
       pointer-events: none;
-      z-index: 10;
+      z-index: 100;
       background: repeating-linear-gradient(
         0deg,
         transparent,
         transparent 2px,
-        rgba(0, 0, 0, 0.08) 2px,
-        rgba(0, 0, 0, 0.08) 4px
+        rgba(0, 0, 0, 0.06) 2px,
+        rgba(0, 0, 0, 0.06) 4px
       );
     }
 
-    /* Subtle vignette */
-    .page::after {
+    /* Vignette */
+    .crt-screen::after {
       content: '';
       position: fixed;
       inset: 0;
       pointer-events: none;
-      z-index: 10;
+      z-index: 100;
       background: radial-gradient(
         ellipse at center,
-        transparent 50%,
-        rgba(0, 0, 0, 0.4) 100%
+        transparent 55%,
+        rgba(0, 0, 0, 0.5) 100%
       );
     }
 
-    .brand {
-      font-size: 48px;
-      font-weight: 300;
-      letter-spacing: 12px;
-      text-transform: uppercase;
-      color: var(--amber);
-      text-shadow:
-        0 0 8px rgba(255, 176, 0, 0.5),
-        0 0 20px rgba(255, 176, 0, 0.3),
-        0 0 40px rgba(255, 176, 0, 0.1);
-      margin-bottom: 48px;
-      user-select: none;
+    /* Subtle screen flicker */
+    @keyframes flicker {
+      0% { opacity: 1; }
+      50% { opacity: 0.98; }
+      100% { opacity: 1; }
     }
 
-    .projects {
-      display: flex;
-      gap: 48px;
-      align-items: stretch;
+    /* Rolling scanline band */
+    .rolling-scanline {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(255, 176, 0, 0.012) 42%,
+        rgba(255, 176, 0, 0.025) 50%,
+        rgba(255, 176, 0, 0.012) 58%,
+        transparent 100%
+      );
+      background-size: 100% 200%;
+      animation: roll 8s linear infinite;
     }
 
-    .project {
+    @keyframes roll {
+      0% { background-position: 0 -100%; }
+      100% { background-position: 0 100%; }
+    }
+
+    /* ── Screen Turn-On Flash ── */
+    .screen-flash {
+      position: fixed;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--amber);
+      transform: translateY(-50%) scaleX(0);
+      box-shadow: 0 0 30px var(--amber-glow), 0 0 60px var(--amber-glow-soft);
+      z-index: 200;
+      opacity: 0;
+    }
+
+    .screen-flash.animate {
+      animation: screenOn 0.5s ease-out forwards;
+    }
+
+    @keyframes screenOn {
+      0% {
+        transform: translateY(-50%) scaleX(0);
+        opacity: 1;
+      }
+      40% {
+        transform: translateY(-50%) scaleX(1);
+        opacity: 1;
+      }
+      60% {
+        transform: translateY(-50%) scaleX(1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(-50%) scaleX(1);
+        opacity: 0;
+      }
+    }
+
+    /* ── Terminal Layout ── */
+    .terminal {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding: 28px 36px;
-      border: 1px solid var(--amber-dark);
-      border-radius: 4px;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.3s ease;
-      min-width: 180px;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100%;
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 0 32px;
       position: relative;
     }
 
-    .project:hover {
-      border-color: var(--amber);
-      box-shadow:
-        0 0 16px rgba(255, 176, 0, 0.12),
-        inset 0 0 20px rgba(255, 176, 0, 0.03);
+    /* Phosphor glow behind content */
+    .terminal::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      height: 55%;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(255, 176, 0, 0.025) 0%,
+        transparent 70%
+      );
+      pointer-events: none;
+      animation: phosphor 6s ease-in-out infinite;
     }
 
-    .project:hover .project-name {
+    @keyframes phosphor {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* ── Boot Sequence ── */
+    .boot {
+      position: absolute;
+      top: 50%;
+      left: 32px;
+      transform: translateY(-50%);
+      transition: opacity 0.3s ease;
+    }
+
+    .boot-line {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--amber-dark);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 2;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .boot-line.visible {
+      opacity: 1;
+    }
+
+    .boot.fade-out {
+      opacity: 0;
+    }
+
+    /* ── Content ── */
+    .content {
+      width: 100%;
+    }
+
+    .brand {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 36px;
+      font-weight: normal;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      color: var(--amber);
+      text-shadow:
+        0 0 10px rgba(255, 176, 0, 0.5),
+        0 0 25px rgba(255, 176, 0, 0.3),
+        0 0 50px rgba(255, 176, 0, 0.1);
+      margin-bottom: 28px;
+      opacity: 0;
+      transform: scale(0.96);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .brand.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* ── Statement ── */
+    .statement {
+      margin-bottom: 36px;
+    }
+
+    .statement-line {
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--amber-text-soft);
+      letter-spacing: 0.5px;
+      line-height: 1.9;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .statement-line.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── App Links ── */
+    .apps {
+      margin-bottom: 20px;
+    }
+
+    .app-line {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 8px 12px;
+      margin-left: -12px;
+      text-decoration: none;
+      color: var(--amber);
+      border-radius: 2px;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s ease;
+    }
+
+    .app-line.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .app-line:hover {
+      background: rgba(255, 176, 0, 0.04);
+    }
+
+    .app-line:hover .prompt {
+      color: var(--amber);
+    }
+
+    .app-line:hover .app-name {
       text-shadow:
         0 0 8px rgba(255, 176, 0, 0.4),
         0 0 16px rgba(255, 176, 0, 0.2);
     }
 
-    .project:hover .project-dot {
-      background: var(--amber);
-      box-shadow: 0 0 6px var(--amber-glow-soft), 0 0 14px var(--amber-glow-med);
+    .prompt {
+      color: var(--amber-dark);
+      font-weight: 400;
+      transition: color 0.2s ease;
+      flex-shrink: 0;
     }
 
-    .project-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--amber-dark);
-      transition: all 0.3s ease;
-    }
-
-    .project-name {
-      font-size: 16px;
+    .app-name {
       font-weight: 500;
-      letter-spacing: 4px;
+      font-size: 14px;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      transition: text-shadow 0.3s ease;
+      min-width: 80px;
+      transition: text-shadow 0.2s ease;
+      flex-shrink: 0;
     }
 
-    .project-desc {
-      font-size: 11px;
+    .app-sep {
+      color: var(--amber-dark);
+      flex-shrink: 0;
+    }
+
+    .app-desc {
+      color: var(--amber-text-dim);
       font-weight: 300;
-      color: var(--text-dim);
-      letter-spacing: 0.5px;
-      text-align: center;
-      line-height: 1.5;
+      font-size: 13px;
     }
 
-    .footer {
+    /* ── Cursor Line ── */
+    .cursor-line {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      padding-left: 12px;
+      margin-left: -12px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .cursor-line.visible {
+      opacity: 1;
+    }
+
+    .cursor {
+      display: inline-block;
+      color: var(--amber);
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ── Footer ── */
+    .sig {
       position: fixed;
-      bottom: 24px;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       font-size: 10px;
       color: var(--amber-dark);
       letter-spacing: 2px;
       text-transform: uppercase;
       user-select: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
 
-    /* Idle ring animation behind brand */
-    .ring-container {
-      position: absolute;
-      width: 280px;
-      height: 280px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -55%);
-      pointer-events: none;
+    .sig.visible {
+      opacity: 1;
     }
 
-    .ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 1px solid var(--amber);
-      opacity: 0.06;
-      animation: ring-breathe 4s ease-in-out infinite;
-    }
-
-    .ring:nth-child(1) { inset: 35%; border-width: 1.5px; animation-delay: 0s; }
-    .ring:nth-child(2) { inset: 22%; animation-delay: 0.5s; }
-    .ring:nth-child(3) { inset: 8%; animation-delay: 1s; }
-    .ring:nth-child(4) { inset: -5%; border-color: var(--amber-dark); animation-delay: 1.5s; }
-
-    @keyframes ring-breathe {
-      0%, 100% { opacity: 0.06; transform: scale(1); }
-      50% { opacity: 0.12; transform: scale(1.02); }
-    }
-
-    @media (max-width: 500px) {
-      .brand {
-        font-size: 32px;
-        letter-spacing: 8px;
-        margin-bottom: 36px;
-      }
-
-      .projects {
-        flex-direction: column;
-        gap: 20px;
-      }
-
-      .project {
-        padding: 20px 28px;
-        min-width: 160px;
-      }
-    }
-
+    /* ── Selection ── */
     ::selection {
       background: rgba(255, 176, 0, 0.3);
       color: var(--amber);
     }
+
+    /* ── Responsive ── */
+    @media (max-width: 500px) {
+      .terminal {
+        padding: 0 20px;
+      }
+
+      .boot {
+        left: 20px;
+      }
+
+      .brand {
+        font-size: 22px;
+        letter-spacing: 6px;
+        margin-bottom: 24px;
+      }
+
+      .statement-line {
+        font-size: 13px;
+      }
+
+      .statement {
+        margin-bottom: 28px;
+      }
+
+      .app-line {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .app-sep {
+        display: none;
+      }
+
+      .app-desc {
+        width: 100%;
+        padding-left: 22px;
+        font-size: 12px;
+      }
+
+      .app-name {
+        min-width: unset;
+      }
+    }
+
+    /* ── Reduced Motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      .crt-screen { animation: none; }
+      .rolling-scanline { animation: none; }
+      .cursor { animation: none; opacity: 1; }
+      .terminal::before { animation: none; opacity: 1; }
+
+      .boot { display: none !important; }
+      .screen-flash { display: none !important; }
+
+      .brand,
+      .statement-line,
+      .app-line,
+      .cursor-line,
+      .sig {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+
+      .app-line {
+        transition: background 0.2s ease !important;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="ring-container">
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-    </div>
+  <div class="crt-screen">
+    <div class="rolling-scanline"></div>
+    <div class="screen-flash"></div>
 
-    <h1 class="brand">13AM</h1>
+    <main class="terminal">
+      <!-- Boot sequence -->
+      <div class="boot" aria-hidden="true">
+        <div class="boot-line">BIOS 13AM v1.0</div>
+        <div class="boot-line">MEM OK</div>
+        <div class="boot-line">LOADING...</div>
+      </div>
 
-    <div class="projects">
-      <a href="https://static.13am.app" class="project">
-        <div class="project-dot"></div>
-        <div class="project-name">Static</div>
-        <div class="project-desc">Internet radio receiver</div>
-      </a>
-      <a href="https://uselog.13am.app" class="project">
-        <div class="project-dot"></div>
-        <div class="project-name">Log</div>
-        <div class="project-desc">Personal logger</div>
-      </a>
-    </div>
+      <!-- Main content -->
+      <div class="content">
+        <h1 class="brand">13AM</h1>
 
-    <div class="footer">13am.app</div>
+        <div class="statement">
+          <p class="statement-line">small software, made at odd hours,</p>
+          <p class="statement-line">built because i wanted it.</p>
+        </div>
+
+        <div class="apps">
+          <a href="https://uselog.13am.app" class="app-line">
+            <span class="prompt">&gt;</span>
+            <span class="app-name">Log</span>
+            <span class="app-sep">&mdash;</span>
+            <span class="app-desc">offload your brain</span>
+          </a>
+          <a href="https://static.13am.app" class="app-line">
+            <span class="prompt">&gt;</span>
+            <span class="app-name">Static</span>
+            <span class="app-sep">&mdash;</span>
+            <span class="app-desc">internet radio receiver</span>
+          </a>
+        </div>
+
+        <div class="cursor-line">
+          <span class="prompt">&gt;</span>
+          <span class="cursor">_</span>
+        </div>
+      </div>
+    </main>
+
+    <footer class="sig">13am.app</footer>
   </div>
+
+  <script>
+    (function () {
+      const flash = document.querySelector('.screen-flash');
+      const boot = document.querySelector('.boot');
+      const bootLines = boot.querySelectorAll('.boot-line');
+      const brand = document.querySelector('.brand');
+      const statementLines = document.querySelectorAll('.statement-line');
+      const appLines = document.querySelectorAll('.app-line');
+      const cursorLine = document.querySelector('.cursor-line');
+      const sig = document.querySelector('.sig');
+
+      // Check reduced motion
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      // Phase 1: Screen flash
+      setTimeout(() => flash.classList.add('animate'), 100);
+
+      // Phase 2: Boot lines
+      bootLines.forEach((line, i) => {
+        setTimeout(() => line.classList.add('visible'), 500 + i * 350);
+      });
+
+      // Phase 3: Fade out boot, reveal content
+      setTimeout(() => {
+        boot.classList.add('fade-out');
+
+        setTimeout(() => {
+          boot.style.display = 'none';
+
+          // Brand
+          brand.classList.add('visible');
+
+          // Statement lines stagger
+          statementLines.forEach((line, i) => {
+            setTimeout(() => line.classList.add('visible'), 300 + i * 200);
+          });
+
+          // App lines
+          const appDelay = 300 + statementLines.length * 200 + 250;
+          appLines.forEach((line, i) => {
+            setTimeout(() => line.classList.add('visible'), appDelay + i * 120);
+          });
+
+          // Cursor
+          const cursorDelay = appDelay + appLines.length * 120 + 150;
+          setTimeout(() => cursorLine.classList.add('visible'), cursorDelay);
+
+          // Footer
+          setTimeout(() => sig.classList.add('visible'), cursorDelay + 200);
+
+        }, 350);
+      }, 1900);
+    })();
+  </script>
 </body>
 </html>
